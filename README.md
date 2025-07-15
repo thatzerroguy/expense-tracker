@@ -1,98 +1,67 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NESTJS EXPENSE TRACKER API
+<hr>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## DESCRIPTION
+Expense tracking is a key component of effective personal financial management. This project will create a robust expense tracker app that allows users to easily monitor their spending, track income, and categorize transactions. With the ability to set budgets and visualize spending trends, users can make more informed financial decisions. The app will also support syncing across devices and provide real-time budget notifications.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## FEATURES
+### User Registration and Authentication:
 
-## Description
+<li>Sign Up: Users can create an account by providing their email, password, and username to save their financial data and track their expenses.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+<li>Login: Registered users can log in to access their financial information and track their progress over time.
 
-## Project setup
+<li> Sync Across Devices: Users can access their expense data from multiple devices with real-time syncing.
 
-```bash
-$ pnpm install
-```
+### Expense and Income Logging:
 
-## Compile and run the project
+<li> Log Expenses: Users can input their daily expenses, categorize them (e.g., groceries, rent, entertainment), and add descriptions or notes to each transaction.
 
-```bash
-# development
-$ pnpm run start
+<li>Log Income: Users can log their income to track their overall financial balance.
 
-# watch mode
-$ pnpm run start:dev
+<li> Recurring Transactions: Users can set recurring transactions (e.g., monthly rent or salary) to automatically log income or expenses.
 
-# production mode
-$ pnpm run start:prod
-```
+### Categories and Budgets:
 
-## Run tests
+<li> Create and Manage Categories: Users can create custom categories (e.g., transportation, food, entertainment) to organize their expenses.
 
-```bash
-# unit tests
-$ pnpm run test
+<li> Set Budgets: Users can set monthly budgets for specific categories, such as groceries or transportation, and monitor how much they have spent versus their allocated budget.
 
-# e2e tests
-$ pnpm run test:e2e
+<li> Track Spending: The app will provide an overview of how much users have spent in each category and notify them when they are nearing or exceeding their budget.
 
-# test coverage
-$ pnpm run test:cov
-```
+### Financial Insights and Reports:
 
-## Deployment
+<li> Spending Overview: Users can view their total income and expenses over different time periods (e.g., weekly, monthly, yearly).
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+<li> Charts and Graphs: Visualize spending patterns with charts and graphs that break down expenses by category or time frame.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+<li> Detailed Reports: Users can generate detailed reports of their financial activity, showing income, expenses, and savings over selected periods.
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
+### Savings Goals and Progress Tracking:
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+<li> Set Savings Goals: Users can set specific savings goals (e.g., saving $500 for a vacation) and track progress toward those goals.
 
-## Resources
+<li> Goal Progress: Users will receive updates on how much they’ve saved toward their goals and get reminders to stay on track.
 
-Check out a few resources that may come in handy when working with NestJS:
+### Notifications and Alerts:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+<li> Budget Alerts: Users can receive notifications when they are nearing or exceeding their set budget for a category.
 
-## Support
+<li> Payment Reminders: Set reminders for upcoming bill payments to avoid late fees.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Data Export and Backup:
 
-## Stay in touch
+<li> Export Financial Data: Users can export their financial data in CSV or PDF format for offline use or sharing with financial advisors.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+<li> Automatic Backups: The app will automatically back up user data to prevent data loss.
 
-## License
+### Offline Mode:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+<li> Work Offline: Users can log transactions offline, and the app will sync data when they reconnect to the internet.
+
+## REAL WORLD USE CASES
+Imagine David, who wants to gain better control over his finances. David signs up for an account on the expense tracker app and starts logging his daily expenses, such as coffee, groceries, and transportation. He categorizes his spending, sets a monthly budget for food and entertainment, and logs his income to track his overall balance.
+
+Throughout the month, David monitors his spending with the help of visual graphs and receives notifications when he’s approaching his food budget limit. He also sets a savings goal to save $1,000 for a vacation. Each week, the app shows him how much he has saved and encourages him to stay on track.
+
+At the end of the month, David generates a detailed report of his spending and exports it to review with his financial advisor.
