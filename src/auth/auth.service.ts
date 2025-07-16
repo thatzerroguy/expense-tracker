@@ -4,6 +4,7 @@ import { DatabaseService } from '../database/database.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +13,7 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly databaseService: DatabaseService,
     private readonly jwt: JwtService,
+    private readonly mail: MailService,
   ) {
     this.logger = new Logger(AuthService.name);
   }
@@ -23,7 +25,7 @@ export class AuthService {
         where: { email: signupDto.email },
       });
       if (existingUser) {
-        throw new HttpException('User with Email Exists', HttpStatus.FORBIDDEN);
+        throw new HttpException('User with Email Exists', HttpStatus.CONFLICT);
       }
 
       // Hash password
@@ -35,6 +37,15 @@ export class AuthService {
       // Generate JWT token
       const payload = { sub: user.id, email: user.email };
       const token = this.jwt.sign(payload);
+
+      // Send welcome email (optional, can be implemented later)
+      await this.mail.sendWelcomeEmail(
+        'Welcome to Our Service',
+        user.email,
+        'noreply@email.com',
+        'welcome-email',
+        { name: user.name },
+      );
 
       return {
         message: 'User successfully created',
