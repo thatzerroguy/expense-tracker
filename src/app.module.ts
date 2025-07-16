@@ -5,6 +5,8 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { MailModule } from './mail/mail.module';
 import config from './config/config';
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -13,8 +15,18 @@ import config from './config/config';
     UsersModule,
     ConfigModule.forRoot({ load: [config], isGlobal: true }),
     MailModule,
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60000, // 60 seconds
+      max: 100,
+    }),
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+  ],
 })
 export class AppModule {}
