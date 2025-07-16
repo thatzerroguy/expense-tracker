@@ -10,7 +10,7 @@ import config from './config/config';
     DatabaseModule,
     AuthModule,
     UsersModule,
-    ConfigModule.forRoot({ load: [config] }),
+    ConfigModule.forRoot({ load: [config], isGlobal: true }),
   ],
   controllers: [],
   providers: [],
