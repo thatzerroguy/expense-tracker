@@ -17,7 +17,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     MailModule,
     CacheModule.register({
       isGlobal: true,
-      ttl: 60000, // 60 seconds
+      ttl: 600000, // 600 seconds
       max: 100,
     }),
   ],

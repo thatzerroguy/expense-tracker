@@ -7,7 +7,7 @@ export class MailService {
 
   constructor(private readonly mailerService: MailerService) {}
 
-  async sendWelcomeEmail(
+  async sendMail(
     subject: string,
     to: string,
     from: string,
@@ -23,9 +23,6 @@ export class MailService {
         context: context,
       };
       await this.mailerService.sendMail(sendMailParams);
-
-      this.logger.log(`Sending ${to}`);
-      this.logger.log('Mail Sent Successfully');
 
       return {
         message: 'Welcome email sent successfully',

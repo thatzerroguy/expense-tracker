@@ -15,6 +15,9 @@ import { MailService } from '../mail/mail.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -50,7 +53,7 @@ export class AuthService {
       const token = this.jwt.sign(payload);
 
       // Send welcome email (optional, can be implemented later)
-      await this.mail.sendWelcomeEmail(
+      await this.mail.sendMail(
         'Welcome to Our Service',
         user.email,
         'noreply@email.com',
@@ -75,20 +78,20 @@ export class AuthService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Store OTP in cache
-    await this.cacheManager.set(`otp:${otp}`, otp);
+    await this.cacheManager.set('otp', otp);
 
     return otp;
   }
 
-  async _verifyOTP(otp: string) {
+  async _verifyOTP(verifyOtpDto: VerifyOtpDto) {
     try {
       // Get OTP from cache
-      const cachedOtp = await this.cacheManager.get(`otp:${otp}`);
+      const cachedOtp = await this.cacheManager.get<string>('otp');
 
       // compare the provided OTP with the cached OTP
-      if (cachedOtp && cachedOtp === otp) {
+      if (cachedOtp && cachedOtp === verifyOtpDto.otp) {
         // OTP is valid, remove it from cache
-        await this.cacheManager.del(`otp:${otp}`);
+        await this.cacheManager.del('otp');
         return { message: 'OTP verified successfully', status: HttpStatus.OK };
       } else {
         throw new HttpException('Invalid OTP', HttpStatus.UNAUTHORIZED);
@@ -139,5 +142,67 @@ export class AuthService {
 
   _generateToken(payload: { sub: string; email: string }) {
     return this.jwt.sign(payload);
+  }
+
+  async _forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    try {
+      // Check if email exists
+      const user = await this.userService.getByEmail(forgotPasswordDto.email);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Generate a reset token
+      const otp = await this._generateOTP();
+
+      // Send reset password email
+      await this.mail.sendMail(
+        'Reset Password Request',
+        user.email,
+        'noreply@support.horizon',
+        'forgot-password-email',
+        { name: user.name, otp },
+      );
+
+      return {
+        message: 'Reset password email sent successfully',
+        status: HttpStatus.OK,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('ForgotPassword failed', error);
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
+  }
+
+  async _resetPassword(resetPasswordDto: ResetPasswordDTO) {
+    return this.databaseService.$transaction(async (tx) => {
+      // Check if user with email exists
+      const existingUser = await this.userService.getByEmail(
+        resetPasswordDto.email,
+      );
+      if (!existingUser) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(
+        resetPasswordDto.newPassword,
+        10,
+      );
+
+      // Update user's password
+      await tx.user.update({
+        where: { email: existingUser.email },
+        data: { password: hashedPassword },
+      });
+
+      return {
+        message: 'Reset password successfully',
+        status: HttpStatus.OK,
+      };
+    });
   }
 }
