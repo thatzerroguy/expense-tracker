@@ -128,6 +128,7 @@ export class AuthService {
       return {
         message: 'User logged in successfully',
         token: token,
+        uuid: user.id,
         status: HttpStatus.OK,
       };
     } catch (error) {

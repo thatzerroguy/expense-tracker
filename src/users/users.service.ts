@@ -38,7 +38,7 @@ export class UsersService {
     try {
       const user = await this.databaseService.user.findUnique({
         where: { id: uuid },
-        select: { password: false },
+        omit: { password: true },
       });
       if (!user) {
         throw new HttpException('No User Found', HttpStatus.NOT_FOUND);
@@ -50,6 +50,9 @@ export class UsersService {
         status: HttpStatus.FOUND,
       };
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       this.logger.error('FindOne failed', error);
       throw new InternalServerErrorException({
         error: HttpStatus.INTERNAL_SERVER_ERROR,

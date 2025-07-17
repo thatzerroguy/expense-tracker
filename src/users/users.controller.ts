@@ -7,9 +7,11 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtGuard } from '../guards/jwt.guard';
 
 @Controller('users')
 export class UsersController {
@@ -19,7 +21,8 @@ export class UsersController {
     return await this.usersService.findAll();
   }
 
-  @Get(':id')
+  @UseGuards(JwtGuard)
+  @Get(':uuid')
   async findOne(
     @Param(
       'uuid',
