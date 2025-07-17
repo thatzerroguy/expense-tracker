@@ -1,9 +1,13 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Req,
+  Res,
+  UseGuards,
   UsePipes,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -20,6 +24,8 @@ import {
   ResetPasswordDTO,
   resetPasswordSchema,
 } from './dto/reset-password.dto';
+import { GoogleGuard } from '../guards/google.guard';
+import { Request, Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -62,5 +68,23 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDTO) {
     return await this.authService._resetPassword(resetPasswordDto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(GoogleGuard)
+  @Get('google')
+  async googleAuth() {}
+
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(GoogleGuard)
+  @Get('google/callback')
+  async googleCallback(@Req() req: Request, @Res() res: Response) {
+    if (!req.user || !('name' in req.user) || !('email' in req.user)) {
+      throw new Error('Invalid user data from Google authentication');
+    }
+    const response = await this.authService.validateGoogleAuth(
+      req.user as { name: string; email: string; password: '' },
+    );
+    res.redirect(`http://localhost:3000/auth/success?token=${response.token}`);
   }
 }

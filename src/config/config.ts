@@ -10,4 +10,7 @@ export default () => ({
   smtpHost: process.env.SMTP_HOST,
   smtpPort: parseInt(process.env.SMTP_PORT || '465', 10),
   smtpService: process.env.SMTP_SERVICE,
+  googleClientID: process.env.GOOGLE_CLIENT_ID,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  googleCallbackURL: process.env.GOOGLE_CALLBACK_URI,
 });

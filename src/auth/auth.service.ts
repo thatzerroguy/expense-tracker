@@ -206,4 +206,34 @@ export class AuthService {
       };
     });
   }
+
+  async validateGoogleAuth(createUserDto: CreateUserDto) {
+    return this.databaseService.$transaction(async (tx) => {
+      // Check if user already exists and return if found
+      const existingUser = await tx.user.findUnique({
+        where: { email: createUserDto.email },
+      });
+      if (existingUser) {
+        const payload = { sub: existingUser.id, email: existingUser.email };
+        const token = this._generateToken(payload);
+        return {
+          message: 'User already exists',
+          uuid: existingUser.id,
+          token: token,
+          status: HttpStatus.OK,
+        };
+      }
+
+      // If user does not exist, create a new user
+      const user = await tx.user.create({ data: createUserDto });
+      const payload = { sub: user.id, email: user.email };
+      const token = this._generateToken(payload);
+      return {
+        message: 'User successfully created',
+        uuid: user.id,
+        token: token,
+        status: HttpStatus.CREATED,
+      };
+    });
+  }
 }

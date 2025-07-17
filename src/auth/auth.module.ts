@@ -7,10 +7,12 @@ import { ConfigService } from '@nestjs/config';
 import { MailModule } from '../mail/mail.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '../strategies/jwt.strategy';
+import { GoogleStrategy } from '../strategies/google.strategy';
+import { LocalStrategy } from '../strategies/local.strategy';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, LocalStrategy],
   imports: [
     UsersModule,
     MailModule,
