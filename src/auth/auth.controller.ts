@@ -73,7 +73,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(GoogleGuard)
   @Get('google')
-  async googleAuth() {}
+  async googleAuth(@Req() req: Request) {
+    return { message: 'Google Auth triggered' };
+  }
 
   @HttpCode(HttpStatus.OK)
   @UseGuards(GoogleGuard)

@@ -27,10 +27,11 @@ export class UsersService {
         status: HttpStatus.FOUND,
       };
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       this.logger.error('FindAll failed', error);
-      throw new InternalServerErrorException({
-        error: HttpStatus.INTERNAL_SERVER_ERROR,
-      });
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
   }
 
@@ -54,9 +55,7 @@ export class UsersService {
         throw error;
       }
       this.logger.error('FindOne failed', error);
-      throw new InternalServerErrorException({
-        error: HttpStatus.INTERNAL_SERVER_ERROR,
-      });
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
   }
 

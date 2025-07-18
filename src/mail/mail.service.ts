@@ -25,7 +25,7 @@ export class MailService {
       await this.mailerService.sendMail(sendMailParams);
 
       return {
-        message: 'Welcome email sent successfully',
+        message: 'Email sent successfully',
         status: HttpStatus.OK,
         send: sendMailParams,
       };

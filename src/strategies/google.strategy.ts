@@ -5,7 +5,7 @@ import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { AuthService } from '../auth/auth.service';
 
 @Injectable()
-export class GoogleStrategy extends PassportStrategy(Strategy) {
+export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   private readonly logger = new Logger(GoogleStrategy.name);
   constructor(
     private readonly config: ConfigService,
@@ -39,7 +39,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
   ) {
     if (!profile.emails?.length) {
       this.logger.error('No email provided from Google');
-      return null;
+      return done(new Error('No email provided'), false);
     }
     // Create a user object with the profile information
     const userPayload = await this.auth.validateGoogleAuth({

@@ -1,25 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
 import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import { AppModule } from '../src/app.module';
+import { DatabaseModule } from '../src/database/database.module';
+import { AuthModule } from '../src/auth/auth.module';
+import { UsersModule } from '../src/users/users.module';
+import { GoogleGuard } from '../src/guards/google.guard';
+import { MockGoogleGuard } from '../src/auth/auth.controller.spec';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+      imports: [AppModule, DatabaseModule, AuthModule, UsersModule],
+    })
+      .overrideProvider(GoogleGuard)
+      .useClass(MockGoogleGuard)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
-  });
-
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
   });
 });

@@ -84,6 +84,7 @@ export class AuthService {
   }
 
   async _verifyOTP(verifyOtpDto: VerifyOtpDto) {
+    //TODO: Fix verification to check which email the OTP is for
     try {
       // Get OTP from cache
       const cachedOtp = await this.cacheManager.get<string>('otp');
