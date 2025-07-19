@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -7,19 +17,28 @@ import { UpdateExpenseDto } from './dto/update-expense.dto';
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 
-  @Post()
-  create(@Body() createExpenseDto: CreateExpenseDto) {
-    return this.expensesService.create(createExpenseDto);
+  @Post(':uuid')
+  create(
+    @Param('uuid') uuid: string,
+    @Body() createExpenseDto: CreateExpenseDto,
+  ) {
+    return this.expensesService.create(uuid, createExpenseDto);
   }
 
-  @Get()
-  findAll() {
-    return this.expensesService.findAll();
+  @Get(':uuid')
+  async findAll(
+    @Param(
+      'uuid',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.UNAUTHORIZED }),
+    )
+    uuid: string,
+  ) {
+    return this.expensesService.findAll(uuid);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.expensesService.findOne(+id);
+  @Get(':uuid')
+  findOne(@Param('uuid') uuid: string) {
+    return this.expensesService.findOne(uuid);
   }
 
   @Patch(':id')
