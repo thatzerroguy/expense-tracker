@@ -8,6 +8,7 @@ import config from './config/config';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ExpensesModule } from './expenses/expenses.module';
+import { IncomeModule } from './income/income.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ExpensesModule } from './expenses/expenses.module';
       max: 100,
     }),
     ExpensesModule,
+    IncomeModule,
   ],
   controllers: [],
   providers: [
