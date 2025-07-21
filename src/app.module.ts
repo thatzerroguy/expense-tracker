@@ -7,6 +7,7 @@ import { MailModule } from './mail/mail.module';
 import config from './config/config';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ExpensesModule } from './expenses/expenses.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
       ttl: 600000, // 600 seconds
       max: 100,
     }),
+    ExpensesModule,
   ],
   controllers: [],
   providers: [
