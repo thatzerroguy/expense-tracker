@@ -190,7 +190,7 @@ describe('ExpensesService', () => {
 
   describe('update', () => {
     it('should return NOT_FOUND if task is not found', async () => {
-      const uuid: string = 'user-id';
+      const uuid: string = 'expense-id';
       const updateExpenseDto: UpdateExpenseDto = {
         amount: 100,
         description: 'Test Expense',
