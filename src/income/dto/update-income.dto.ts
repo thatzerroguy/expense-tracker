@@ -1,4 +1,6 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateIncomeDto } from './create-income.dto';
+import { createIncomeSchema } from './create-income.dto';
+import { z } from 'zod';
 
-export class UpdateIncomeDto extends PartialType(CreateIncomeDto) {}
+export const updateIncomeSchema = createIncomeSchema.partial();
+
+export type UpdateIncomeDto = z.infer<typeof updateIncomeSchema>;

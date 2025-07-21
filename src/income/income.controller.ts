@@ -1,34 +1,76 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { IncomeService } from './income.service';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
+import { JwtGuard } from '../guards/jwt.guard';
 
 @Controller('income')
 export class IncomeController {
   constructor(private readonly incomeService: IncomeService) {}
 
-  @Post()
-  create(@Body() createIncomeDto: CreateIncomeDto) {
-    return this.incomeService.create(createIncomeDto);
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @Post(':uuid')
+  create(
+    @Param(
+      'uuid',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.UNAUTHORIZED }),
+    )
+    uuid: string,
+    @Body()
+    createIncomeDto: CreateIncomeDto,
+  ) {
+    return this.incomeService.create(uuid, createIncomeDto);
   }
 
-  @Get()
-  findAll() {
-    return this.incomeService.findAll();
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.FOUND)
+  @Get(':uuid')
+  findAll(
+    @Param(
+      'uuid',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.UNAUTHORIZED }),
+    )
+    uuid: string,
+  ) {
+    return this.incomeService.findAll(uuid);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.incomeService.findOne(+id);
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.FOUND)
+  @Get('/single/:uuid')
+  findOne(
+    @Param(
+      'uuid',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.UNAUTHORIZED }),
+    )
+    uuid: string,
+  ) {
+    return this.incomeService.findOne(uuid);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateIncomeDto: UpdateIncomeDto) {
-    return this.incomeService.update(+id, updateIncomeDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.incomeService.remove(+id);
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Patch(':uuid')
+  update(
+    @Param(
+      'uuid',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.UNAUTHORIZED }),
+    )
+    uuid: string,
+    @Body() updateIncomeDto: UpdateIncomeDto,
+  ) {
+    return this.incomeService.update(uuid, updateIncomeDto);
   }
 }
