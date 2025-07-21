@@ -2,9 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ExpensesService } from './expenses.service';
 import { DatabaseService } from '../database/database.service';
 import { UsersService } from '../users/users.service';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { ExpenseTypeDto } from './dto/expense-type.dto';
 
 describe('ExpensesService', () => {
   let service: ExpensesService;
@@ -124,7 +125,7 @@ describe('ExpensesService', () => {
 
       expect(result).toEqual({
         message: 'Expenses for user found',
-        data: result.data,
+        expenses: result.expenses,
         status: HttpStatus.FOUND,
       });
 
@@ -238,6 +239,80 @@ describe('ExpensesService', () => {
         data: result.data,
         uuid: 'user-id',
         status: HttpStatus.ACCEPTED,
+      });
+    });
+  });
+
+  describe('getTotalExpenses', () => {
+    it('should return NOT_FOUND if user is not found', async () => {
+      const uuid: string = 'nonexistent-user-id';
+
+      jest.spyOn(mockUserService, 'findOne').mockResolvedValue(null);
+
+      await expect(service.getTotalExpenses(uuid)).rejects.toThrowError(
+        new NotFoundException('No User Found'),
+      );
+    });
+
+    it('should return uuid and amount of total expenses', async () => {
+      const uuid: string = 'user-id';
+      const mockExpenses = [{ amount: 100 }, { amount: 200 }, { amount: 300 }];
+      const totalAmount = mockExpenses.reduce(
+        (sum, expense) => sum + expense.amount,
+        0,
+      );
+
+      mockUserService.findOne.mockResolvedValue({ user: { id: uuid } });
+      jest
+        .spyOn(mockDatabaseService.expenses, 'findMany')
+        .mockResolvedValue(mockExpenses);
+
+      const result = await service.getTotalExpenses(uuid);
+
+      expect(result).toEqual({
+        uuid,
+        totalAmount,
+      });
+    });
+  });
+
+  describe('totalExpenseByType', () => {
+    it('should return NOT_FOUND if user is not found', async () => {
+      const uuid: string = 'user-id';
+      const expenseType: ExpenseTypeDto = { expenseType: 'FOOD' };
+
+      jest.spyOn(mockUserService, 'findOne').mockResolvedValue(null);
+
+      await expect(
+        service.getTotalExpensesByType(uuid, expenseType),
+      ).rejects.toThrowError(new NotFoundException('No User Found'));
+    });
+    it('should return total expense for type and uuid', async () => {
+      const uuid: string = 'user-id';
+      const expenseType: ExpenseTypeDto = { expenseType: 'FOOD' };
+      const mockExpenses = [
+        { amount: 100, expenseType: 'FOOD' },
+        { amount: 200, expenseType: 'FOOD' },
+        { amount: 300, expenseType: 'FOOD' },
+      ];
+
+      mockUserService.findOne.mockResolvedValue({ user: { id: uuid } });
+      jest
+        .spyOn(mockDatabaseService.expenses, 'findMany')
+        .mockResolvedValue(mockExpenses);
+
+      const result = await service.getTotalExpensesByType(uuid, expenseType);
+      const foodExpenses = mockExpenses.filter(
+        (expense) => expense.expenseType === 'FOOD',
+      );
+      const totalFoodAmount = foodExpenses.reduce(
+        (sum, expense) => sum + expense.amount,
+        0,
+      );
+      expect(result).toEqual({
+        uuid,
+        expenseType: 'FOOD',
+        totalAmount: totalFoodAmount,
       });
     });
   });
