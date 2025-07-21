@@ -9,6 +9,7 @@ import { DatabaseService } from '../database/database.service';
 import { UsersService } from '../users/users.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { ExpenseTypeDto } from './dto/expense-type.dto';
 
 @Injectable()
 export class ExpensesService {
@@ -67,7 +68,7 @@ export class ExpensesService {
 
       return {
         message: 'Expenses for user found',
-        data: expenses,
+        expenses: expenses,
         status: HttpStatus.FOUND,
       };
     } catch (error) {
@@ -129,5 +130,103 @@ export class ExpensesService {
         status: HttpStatus.ACCEPTED,
       };
     });
+  }
+
+  async getTotalExpenses(uuid: string) {
+    try {
+      // Check if user exists
+      const userResponse = await this.userService.findOne(uuid);
+      if (!userResponse || !userResponse.user) {
+        throw new HttpException('No User Found', HttpStatus.NOT_FOUND);
+      }
+
+      const { user } = userResponse;
+
+      //Get all expenses for the user
+      const expensesResponse = await this.findAll(uuid);
+      if (
+        !expensesResponse ||
+        !expensesResponse.expenses ||
+        expensesResponse.expenses.length === 0
+      ) {
+        throw new HttpException(
+          'No Expenses Found for User',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      const { expenses } = expensesResponse;
+
+      // Extract total amount from expenses
+      const totalAmount = expenses.reduce(
+        (sum, expense) => sum + expense.amount,
+        0,
+      );
+
+      return {
+        uuid: user.id,
+        totalAmount: totalAmount,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(error);
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
+  }
+
+  async getTotalExpensesByType(uuid: string, expenseType: ExpenseTypeDto) {
+    try {
+      // Check if user exists
+      const userResponse = await this.userService.findOne(uuid);
+      if (!userResponse || !userResponse.user) {
+        throw new HttpException('No User Found', HttpStatus.NOT_FOUND);
+      }
+
+      const { user } = userResponse;
+
+      // Get all expenses with the specified type for the user
+      const expenses = await this.databaseService.expenses.findMany({
+        where: {
+          userId: user.id,
+          expenseType: expenseType.expenseType,
+        },
+        omit: {
+          description: true,
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          userId: true,
+          date: true,
+        },
+      });
+
+      // Check if expenses exist
+      if (!expenses || expenses.length === 0) {
+        throw new HttpException(
+          'No Expenses Found for User with this type',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      // Calculate total amount for the specified expense type
+      const totalAmount = expenses.reduce(
+        (sum, expense) => sum + expense.amount,
+        0,
+      );
+
+      return {
+        uuid: user.id,
+        expenseType: expenseType.expenseType,
+        totalAmount: totalAmount,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(error);
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
   }
 }
