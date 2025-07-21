@@ -4,6 +4,7 @@ import { DatabaseService } from '../database/database.service';
 import { UsersService } from '../users/users.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { CreateExpenseDto } from './dto/create-expense.dto';
+import { UpdateExpenseDto } from './dto/update-expense.dto';
 
 describe('ExpensesService', () => {
   let service: ExpensesService;
@@ -182,6 +183,61 @@ describe('ExpensesService', () => {
         message: 'Expense found',
         data: mockExpense,
         status: HttpStatus.FOUND,
+      });
+    });
+  });
+
+  describe('update', () => {
+    it('should return NOT_FOUND if task is not found', async () => {
+      const uuid: string = 'user-id';
+      const updateExpenseDto: UpdateExpenseDto = {
+        amount: 100,
+        description: 'Test Expense',
+        expenseType: 'FOOD',
+      };
+      jest
+        .spyOn(mockDatabaseService.expenses, 'findUnique')
+        .mockResolvedValue(null);
+
+      await expect(service.update(uuid, updateExpenseDto)).rejects.toThrowError(
+        new HttpException('No Expense Found', HttpStatus.NOT_FOUND),
+      );
+    });
+    it('should return FOUND and task', async () => {
+      const uuid: string = 'user-id';
+      const expenseId: string = 'expense-id';
+      const updateExpenseDto: UpdateExpenseDto = {
+        description: 'Test Expense',
+        expenseType: 'HEALTHCARE',
+      };
+      const mockExpense = {
+        id: expenseId,
+        userId: uuid,
+        description: 'Test Expense',
+        amount: 100,
+        expenseType: 'HEALTHCARE',
+      };
+
+      mockDatabaseService.$transaction.mockImplementation((callback: any) =>
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
+        callback({
+          expenses: {
+            findUnique: jest.fn().mockResolvedValue(mockExpense),
+            update: jest.fn().mockResolvedValue({
+              ...mockExpense,
+              userId: uuid,
+            }),
+          },
+        }),
+      );
+
+      const result = await service.update(uuid, updateExpenseDto);
+
+      expect(result).toEqual({
+        message: 'Expense updated successfully',
+        data: result.data,
+        uuid: 'user-id',
+        status: HttpStatus.ACCEPTED,
       });
     });
   });

@@ -53,7 +53,10 @@ describe('AuthController', () => {
           useClass: MockGoogleGuard,
         },
       ],
-    }).compile();
+    })
+      .overrideProvider(GoogleGuard)
+      .useClass(MockGoogleGuard)
+      .compile();
     app = module.createNestApplication();
     await app.init();
 

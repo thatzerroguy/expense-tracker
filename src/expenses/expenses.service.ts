@@ -46,14 +46,16 @@ export class ExpensesService {
   async findAll(uuid: string) {
     try {
       // Check if user exists
-      const user = await this.userService.findOne(uuid);
-      if (!user) {
+      const userResponse = await this.userService.findOne(uuid);
+      if (!userResponse || !userResponse.user) {
         throw new HttpException('No User Found', HttpStatus.NOT_FOUND);
       }
 
+      const { user } = userResponse;
+
       // Check if user has expenses
       const expenses = await this.databaseService.expenses.findMany({
-        where: { userId: uuid },
+        where: { userId: user.id },
       });
 
       if (!expenses || expenses.length === 0) {
@@ -101,11 +103,31 @@ export class ExpensesService {
     }
   }
 
-  update(id: number, updateExpenseDto: UpdateExpenseDto) {
-    return `This action updates a #${id} expense`;
-  }
+  async update(uuid: string, updateExpenseDto: UpdateExpenseDto) {
+    return this.databaseService.$transaction(async (tx) => {
+      // Check if expense exists
+      const expense = await tx.expenses.findUnique({
+        where: { id: uuid },
+      });
+      if (!expense) {
+        throw new HttpException('No Expense Found', HttpStatus.NOT_FOUND);
+      }
 
-  remove(id: number) {
-    return `This action removes a #${id} expense`;
+      // Update expense
+      const updatedExpense = await tx.expenses.update({
+        where: { id: uuid },
+        data: {
+          ...updateExpenseDto,
+          userId: expense.userId,
+        },
+      });
+
+      return {
+        message: 'Expense updated successfully',
+        data: updatedExpense,
+        uuid: updatedExpense.userId,
+        status: HttpStatus.ACCEPTED,
+      };
+    });
   }
 }
