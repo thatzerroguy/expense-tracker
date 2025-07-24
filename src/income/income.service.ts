@@ -1,6 +1,8 @@
 import {
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -11,6 +13,12 @@ import { UpdateIncomeDto } from './dto/update-income.dto';
 import { DatabaseService } from '../database/database.service';
 import { UsersService } from '../users/users.service';
 import { RecurIncomeDto } from './dto/recur-income.dto';
+import { RecurringIncome, User } from '../../generated/prisma';
+import { RecurringTransacService } from '../recurring-transac/recurring-transac.service';
+
+type RecurringIncomeWithUser = RecurringIncome & {
+  user: User;
+};
 
 @Injectable()
 export class IncomeService {
@@ -18,6 +26,8 @@ export class IncomeService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly userService: UsersService,
+    @Inject(forwardRef(() => RecurringTransacService))
+    private readonly recurringTransacService: RecurringTransacService,
   ) {}
   async create(uuid: string, createIncomeDto: CreateIncomeDto) {
     return this.databaseService.$transaction(async (tx) => {
@@ -155,6 +165,62 @@ export class IncomeService {
         data: recurIncome,
         status: HttpStatus.CREATED,
       };
+    });
+  }
+
+  public async processRecurringIncome() {
+    const now = new Date();
+
+    // Find all recurring income due for execution
+    const dueRecurringIncome =
+      await this.databaseService.recurringIncome.findMany({
+        where: {
+          isActive: true,
+          nextExecutionDate: {
+            lte: now,
+          },
+        },
+        include: {
+          user: true,
+        },
+      });
+
+    for (const income of dueRecurringIncome) {
+      //TODO: create income
+      await this.logIncomeFromRecurring(income);
+    }
+  }
+
+  private async logIncomeFromRecurring(income: RecurringIncomeWithUser) {
+    return this.databaseService.$transaction(async (tx) => {
+      // Log income record
+      await tx.income.create({
+        data: {
+          userId: income.userId,
+          source: income.source,
+          amount: income.amount,
+          date: new Date(),
+          recurringIncomeId: income.id,
+        },
+      });
+
+      const nextDateDto = {
+        frequency: income.frequency,
+        interval: income.interval,
+        currentDate: income.nextExecutionDate,
+      };
+
+      // Calculate next date
+      const nextDate =
+        this.recurringTransacService.calculateNextExecutionDate(nextDateDto);
+
+      // Update recurring details with next date
+      await tx.recurringIncome.update({
+        where: { id: income.id },
+        data: {
+          nextExecutionDate: nextDate,
+        },
+      });
     });
   }
 }

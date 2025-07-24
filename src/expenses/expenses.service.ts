@@ -12,6 +12,7 @@ import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { ExpenseTypeDto } from './dto/expense-type.dto';
 import { RecurExpenseDto } from './dto/recu-expense.dto';
+import { RecurringTransacService } from '../recurring-transac/recurring-transac.service';
 
 @Injectable()
 export class ExpensesService {
@@ -19,6 +20,7 @@ export class ExpensesService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly userService: UsersService,
+    private readonly recurringTransacService: RecurringTransacService,
   ) {}
   async create(uuid: string, createExpenseDto: CreateExpenseDto) {
     return this.databaseService.$transaction(async (tx) => {
