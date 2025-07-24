@@ -10,6 +10,7 @@ import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { DatabaseService } from '../database/database.service';
 import { UsersService } from '../users/users.service';
+import { RecurIncomeDto } from './dto/recur-income.dto';
 
 @Injectable()
 export class IncomeService {
@@ -124,6 +125,35 @@ export class IncomeService {
         data: updateIncome,
         uuid: uuid,
         status: HttpStatus.ACCEPTED,
+      };
+    });
+  }
+
+  // Recurring income logging for user
+  async createRecurringIncome(uuid: string, recurIncomeDto: RecurIncomeDto) {
+    return this.databaseService.$transaction(async (tx) => {
+      // Check if user exists
+      const userResponse = await this.userService.findOne(uuid);
+      if (!userResponse) {
+        throw new NotFoundException('No user with id found.');
+      }
+
+      const { user } = userResponse;
+
+      // Create recurring income details
+      const recurIncome = await tx.recurringIncome.create({
+        data: {
+          ...recurIncomeDto,
+          userId: user.id,
+          isActive: true,
+          nextExecutionDate: new Date().toISOString(),
+        },
+      });
+
+      return {
+        message: 'Recurring Income details created successfully.',
+        data: recurIncome,
+        status: HttpStatus.CREATED,
       };
     });
   }

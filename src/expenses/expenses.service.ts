@@ -4,12 +4,14 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { UsersService } from '../users/users.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { ExpenseTypeDto } from './dto/expense-type.dto';
+import { RecurExpenseDto } from './dto/recu-expense.dto';
 
 @Injectable()
 export class ExpensesService {
@@ -228,5 +230,35 @@ export class ExpensesService {
       this.logger.error(error);
       throw new InternalServerErrorException('An unexpected error occurred');
     }
+  }
+
+  async createRecurringExpense(
+    uuid: string,
+    createRecurExpenseDto: RecurExpenseDto,
+  ) {
+    return this.databaseService.$transaction(async (tx) => {
+      // Check if user exists
+      const userResponse = await this.userService.findOne(uuid);
+      if (!userResponse) {
+        throw new NotFoundException('User not found.');
+      }
+      const { user } = userResponse;
+
+      // Create recurring expense for user
+      const recurExpense = await tx.recurringExpense.create({
+        data: {
+          ...createRecurExpenseDto,
+          userId: user.id,
+          isActive: true,
+          nextExecutionDate: new Date(),
+        },
+      });
+
+      return {
+        message: 'Recurring expense details created successfully.',
+        data: recurExpense,
+        status: HttpStatus.CREATED,
+      };
+    });
   }
 }
