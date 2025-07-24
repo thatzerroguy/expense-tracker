@@ -150,13 +150,23 @@ export class IncomeService {
 
       const { user } = userResponse;
 
+      // Calculate next date of execution
+      const nextDateDto = {
+        frequency: recurIncomeDto.frequency,
+        interval: recurIncomeDto.interval,
+        currentDate: recurIncomeDto.startDate,
+      };
+
+      const nextDate =
+        this.recurringTransacService.calculateNextExecutionDate(nextDateDto);
+
       // Create recurring income details
       const recurIncome = await tx.recurringIncome.create({
         data: {
           ...recurIncomeDto,
           userId: user.id,
           isActive: true,
-          nextExecutionDate: new Date().toISOString(),
+          nextExecutionDate: nextDate,
         },
       });
 
@@ -186,7 +196,6 @@ export class IncomeService {
       });
 
     for (const income of dueRecurringIncome) {
-      //TODO: create income
       await this.logIncomeFromRecurring(income);
     }
   }
