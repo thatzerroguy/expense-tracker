@@ -1,6 +1,8 @@
 import {
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -13,6 +15,11 @@ import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { ExpenseTypeDto } from './dto/expense-type.dto';
 import { RecurExpenseDto } from './dto/recu-expense.dto';
 import { RecurringTransacService } from '../recurring-transac/recurring-transac.service';
+import { RecurringExpense, User } from '../../generated/prisma';
+
+type RecurringExpenseWithUser = RecurringExpense & {
+  user: User;
+};
 
 @Injectable()
 export class ExpensesService {
@@ -20,6 +27,7 @@ export class ExpensesService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly userService: UsersService,
+    @Inject(forwardRef(() => RecurringTransacService))
     private readonly recurringTransacService: RecurringTransacService,
   ) {}
   async create(uuid: string, createExpenseDto: CreateExpenseDto) {
@@ -246,13 +254,22 @@ export class ExpensesService {
       }
       const { user } = userResponse;
 
+      // Calculate next date of execution
+      const nextDateDto = {
+        frequency: createRecurExpenseDto.frequency,
+        interval: createRecurExpenseDto.interval,
+        currentDate: createRecurExpenseDto.startDate,
+      };
+      const nextDate =
+        this.recurringTransacService.calculateNextExecutionDate(nextDateDto);
+
       // Create recurring expense for user
       const recurExpense = await tx.recurringExpense.create({
         data: {
           ...createRecurExpenseDto,
           userId: user.id,
           isActive: true,
-          nextExecutionDate: new Date(),
+          nextExecutionDate: nextDate,
         },
       });
 
@@ -261,6 +278,62 @@ export class ExpensesService {
         data: recurExpense,
         status: HttpStatus.CREATED,
       };
+    });
+  }
+
+  public async processRecurringExpense() {
+    const now = new Date();
+
+    // Find all recurring expenses due for execution
+    const dueRecurringExpenses =
+      await this.databaseService.recurringExpense.findMany({
+        where: {
+          isActive: true,
+          nextExecutionDate: {
+            lte: now,
+          },
+        },
+        include: {
+          user: true,
+        },
+      });
+
+    for (const expense of dueRecurringExpenses) {
+      await this.logExpenseFromRecurring(expense);
+    }
+  }
+
+  private async logExpenseFromRecurring(expense: RecurringExpenseWithUser) {
+    return this.databaseService.$transaction(async (tx) => {
+      // Log expense record
+      await tx.expenses.create({
+        data: {
+          userId: expense.userId,
+          description: expense.description,
+          amount: expense.amount,
+          expenseType: expense.expenseType,
+          date: new Date(),
+          recurringExpenseId: expense.id,
+        },
+      });
+
+      const nextDateDto = {
+        frequency: expense.frequency,
+        interval: expense.interval,
+        currentDate: expense.nextExecutionDate,
+      };
+
+      // Calculate next date
+      const nextDate =
+        this.recurringTransacService.calculateNextExecutionDate(nextDateDto);
+
+      // Update recurring details with next date
+      await tx.recurringExpense.update({
+        where: { id: expense.id },
+        data: {
+          nextExecutionDate: nextDate,
+        },
+      });
     });
   }
 }
