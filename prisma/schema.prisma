@@ -15,14 +15,16 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  name      String
-  password  String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  expenses  Expenses[]
-  Income    Income[]
+  id               String             @id @default(uuid())
+  email            String             @unique
+  name             String
+  password         String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  expenses         Expenses[]
+  Income           Income[]
+  RecuuringIncome  RecurringIncome[]
+  RecurringExpense RecurringExpense[]
 }
 
 model Expenses {
@@ -35,7 +37,9 @@ model Expenses {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user               User              @relation(fields: [userId], references: [id])
+  RecurringExpense   RecurringExpense? @relation(fields: [recurringExpenseId], references: [id])
+  recurringExpenseId String?
 }
 
 enum expenseType {
@@ -56,5 +60,50 @@ model Income {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id])
+  RecurringIncome   RecurringIncome? @relation(fields: [recurringIncomeId], references: [id])
+  recurringIncomeId String?
+}
+
+model RecurringIncome {
+  id                String    @id @default(uuid())
+  userId            String
+  source            String
+  amount            Float
+  frequency         Frequency
+  interval          Int       @default(1)
+  startDate         DateTime
+  nextExecutionDate DateTime
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user   User     @relation(fields: [userId], references: [id])
+  income Income[]
+}
+
+model RecurringExpense {
+  id          String      @id @default(uuid())
+  userId      String
+  description String
+  amount      Float
+  expenseType expenseType
+
+  frequency         Frequency
+  interval          Int       @default(1)
+  startDate         DateTime
+  nextExecutionDate DateTime
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user    User       @relation(fields: [userId], references: [id])
+  expense Expenses[]
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
 }

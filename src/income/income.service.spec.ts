@@ -5,6 +5,8 @@ import { DatabaseService } from '../database/database.service';
 import { HttpStatus, NotFoundException } from '@nestjs/common';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
+import { RecurIncomeDto } from './dto/recur-income.dto';
+import { RecurringTransacService } from '../recurring-transac/recurring-transac.service';
 
 describe('IncomeService', () => {
   let service: IncomeService;
@@ -21,6 +23,11 @@ describe('IncomeService', () => {
     },
   };
 
+  const mockRecurringTransacService = {
+    calculateNextExecutionDate: jest.fn(),
+    processRecurringIncome: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -32,6 +39,10 @@ describe('IncomeService', () => {
         {
           provide: DatabaseService,
           useValue: mockDatabaseService,
+        },
+        {
+          provide: RecurringTransacService,
+          useValue: mockRecurringTransacService,
         },
       ],
     }).compile();
@@ -250,6 +261,57 @@ describe('IncomeService', () => {
         data: result.data,
         uuid: uuid,
         status: HttpStatus.ACCEPTED,
+      });
+    });
+  });
+
+  describe('CreateRecurringIncome', () => {
+    it('should return NOT_FOUND if user is not found', async () => {
+      const uuid = 'non-existent-expense-id';
+      const recurIncomeDto: RecurIncomeDto = {
+        source: 'Work',
+        amount: 10000,
+        frequency: 'MONTHLY',
+        interval: 1,
+        startDate: new Date(),
+      };
+
+      mockUserService.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.createRecurringIncome(uuid, recurIncomeDto),
+      ).rejects.toThrowError(new NotFoundException('No user with id found.'));
+    });
+
+    it('should return CREATED when recurring income details has been created', async () => {
+      const uuid = 'non-existent-expense-id';
+      const recurIncomeDto: RecurIncomeDto = {
+        source: 'Work',
+        amount: 10000,
+        frequency: 'MONTHLY',
+        interval: 1,
+        startDate: new Date(),
+      };
+
+      mockUserService.findOne.mockResolvedValue({ user: { id: uuid } });
+
+      mockDatabaseService.$transaction.mockImplementation((callbacck: any) =>
+        callbacck({
+          recurringIncome: {
+            create: jest.fn().mockResolvedValue({
+              ...recurIncomeDto,
+              userId: uuid,
+            }),
+          },
+        }),
+      );
+
+      const result = await service.createRecurringIncome(uuid, recurIncomeDto);
+
+      expect(result).toEqual({
+        message: 'Recurring Income details created successfully.',
+        data: result.data,
+        status: HttpStatus.CREATED,
       });
     });
   });

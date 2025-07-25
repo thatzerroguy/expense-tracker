@@ -6,6 +6,8 @@ import { HttpException, HttpStatus, NotFoundException } from '@nestjs/common';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { ExpenseTypeDto } from './dto/expense-type.dto';
+import { RecurExpenseDto } from './dto/recu-expense.dto';
+import { RecurringTransacService } from '../recurring-transac/recurring-transac.service';
 
 describe('ExpensesService', () => {
   let service: ExpensesService;
@@ -19,6 +21,10 @@ describe('ExpensesService', () => {
   const mockUserService = {
     findOne: jest.fn(),
   };
+  const mockRecurringTransacService = {
+    calculateNextExecutionDate: jest.fn(),
+    processRecurringExpense: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -26,6 +32,10 @@ describe('ExpensesService', () => {
         ExpensesService,
         { provide: DatabaseService, useValue: mockDatabaseService },
         { provide: UsersService, useValue: mockUserService },
+        {
+          provide: RecurringTransacService,
+          useValue: mockRecurringTransacService,
+        },
       ],
     }).compile();
 
@@ -313,6 +323,64 @@ describe('ExpensesService', () => {
         uuid,
         expenseType: 'FOOD',
         totalAmount: totalFoodAmount,
+      });
+    });
+  });
+
+  describe('createRecurringExpense', () => {
+    it('should return NOT_FOUND if user is not found', async () => {
+      const uuid: string = 'non-existing-user-id';
+      const recurExpenseDto: RecurExpenseDto = {
+        description: 'Expense on transportation to work',
+        amount: 12000,
+        expenseType: 'TRANSPORT',
+        frequency: 'WEEKLY',
+        interval: 1,
+        startDate: new Date(),
+      };
+
+      mockUserService.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.createRecurringExpense(uuid, recurExpenseDto),
+      ).rejects.toThrowError(new NotFoundException('User not found.'));
+    });
+
+    it('should return CREATED and details of recurring expense', async () => {
+      const uuid: string = 'user-id';
+      const recurExpenseDto: RecurExpenseDto = {
+        description: 'Expense on transportation to work',
+        amount: 12000,
+        expenseType: 'TRANSPORT',
+        frequency: 'WEEKLY',
+        interval: 1,
+        startDate: new Date(),
+      };
+
+      mockUserService.findOne.mockResolvedValue({
+        user: { id: uuid },
+      });
+
+      mockDatabaseService.$transaction.mockImplementation((callback: any) =>
+        callback({
+          recurringExpense: {
+            create: jest.fn().mockResolvedValue({
+              ...recurExpenseDto,
+              userId: uuid,
+            }),
+          },
+        }),
+      );
+
+      const result = await service.createRecurringExpense(
+        uuid,
+        recurExpenseDto,
+      );
+
+      expect(result).toEqual({
+        message: 'Recurring expense details created successfully.',
+        data: result.data,
+        status: HttpStatus.CREATED,
       });
     });
   });

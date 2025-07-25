@@ -21,6 +21,7 @@ import {
 } from './dto/update-expense.dto';
 import { ZodValidationPipe } from '../pipes/validation.pipe';
 import { JwtGuard } from '../guards/jwt.guard';
+import { RecurExpenseDto, RecurExpenseSchema } from './dto/recu-expense.dto';
 
 @Controller('expenses')
 export class ExpensesController {
@@ -80,5 +81,20 @@ export class ExpensesController {
     updateExpenseDto: UpdateExpenseDto,
   ) {
     return await this.expensesService.update(uuid, updateExpenseDto);
+  }
+
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @Post('/recur/:uuid')
+  createRecurExpense(
+    @Param(
+      'uuid',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.UNAUTHORIZED }),
+    )
+    uuid: string,
+    @Body(new ZodValidationPipe(RecurExpenseSchema))
+    createRecurIncome: RecurExpenseDto,
+  ) {
+    return this.expensesService.createRecurringExpense(uuid, createRecurIncome);
   }
 }

@@ -9,6 +9,8 @@ import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ExpensesModule } from './expenses/expenses.module';
 import { IncomeModule } from './income/income.module';
+import { RecurringTransacModule } from './recurring-transac/recurring-transac.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { IncomeModule } from './income/income.module';
     }),
     ExpensesModule,
     IncomeModule,
+    RecurringTransacModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [

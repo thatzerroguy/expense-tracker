@@ -14,6 +14,8 @@ import { IncomeService } from './income.service';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { JwtGuard } from '../guards/jwt.guard';
+import { ZodValidationPipe } from '../pipes/validation.pipe';
+import { RecurIncomeDto, RecurIncomeSchema } from './dto/recur-income.dto';
 
 @Controller('income')
 export class IncomeController {
@@ -72,5 +74,20 @@ export class IncomeController {
     @Body() updateIncomeDto: UpdateIncomeDto,
   ) {
     return this.incomeService.update(uuid, updateIncomeDto);
+  }
+
+  @UseGuards(JwtGuard)
+  @HttpCode(HttpStatus.CREATED)
+  @Post('/recur/:uuid')
+  createRecurIncome(
+    @Param(
+      'uuid',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.UNAUTHORIZED }),
+    )
+    uuid: string,
+    @Body(new ZodValidationPipe(RecurIncomeSchema))
+    createRecurIncome: RecurIncomeDto,
+  ) {
+    return this.incomeService.createRecurringIncome(uuid, createRecurIncome);
   }
 }
