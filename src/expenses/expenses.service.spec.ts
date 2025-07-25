@@ -7,6 +7,7 @@ import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { ExpenseTypeDto } from './dto/expense-type.dto';
 import { RecurExpenseDto } from './dto/recu-expense.dto';
+import { RecurringTransacService } from '../recurring-transac/recurring-transac.service';
 
 describe('ExpensesService', () => {
   let service: ExpensesService;
@@ -20,6 +21,10 @@ describe('ExpensesService', () => {
   const mockUserService = {
     findOne: jest.fn(),
   };
+  const mockRecurringTransacService = {
+    calculateNextExecutionDate: jest.fn(),
+    processRecurringExpense: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,6 +32,10 @@ describe('ExpensesService', () => {
         ExpensesService,
         { provide: DatabaseService, useValue: mockDatabaseService },
         { provide: UsersService, useValue: mockUserService },
+        {
+          provide: RecurringTransacService,
+          useValue: mockRecurringTransacService,
+        },
       ],
     }).compile();
 

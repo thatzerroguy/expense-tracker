@@ -6,6 +6,7 @@ import { HttpStatus, NotFoundException } from '@nestjs/common';
 import { CreateIncomeDto } from './dto/create-income.dto';
 import { UpdateIncomeDto } from './dto/update-income.dto';
 import { RecurIncomeDto } from './dto/recur-income.dto';
+import { RecurringTransacService } from '../recurring-transac/recurring-transac.service';
 
 describe('IncomeService', () => {
   let service: IncomeService;
@@ -22,6 +23,11 @@ describe('IncomeService', () => {
     },
   };
 
+  const mockRecurringTransacService = {
+    calculateNextExecutionDate: jest.fn(),
+    processRecurringIncome: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -33,6 +39,10 @@ describe('IncomeService', () => {
         {
           provide: DatabaseService,
           useValue: mockDatabaseService,
+        },
+        {
+          provide: RecurringTransacService,
+          useValue: mockRecurringTransacService,
         },
       ],
     }).compile();
